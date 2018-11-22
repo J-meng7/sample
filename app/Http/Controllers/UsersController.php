@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 
 class UsersController extends Controller
 {
@@ -24,6 +26,10 @@ class UsersController extends Controller
         return view('users.create');
     }
 
+    /**创建用户信息
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function store(Request $request)
     {
         $this->validate($request,[
@@ -36,7 +42,10 @@ class UsersController extends Controller
             'email'=> $request->email,
             'password'=> bcrypt($request->password),
         ]);
+        Auth::login($user);
         session()->flash('success', '欢迎，您将在这里开启一段新的旅程~');
         return redirect()->route('users.show', [$user]);
     }
+
+
 }
