@@ -9,6 +9,36 @@ use Illuminate\Support\Facades\Session;
 
 class UsersController extends Controller
 {
+    public function __construct()
+    {
+        //auth中间件允许已登录用户访问
+        $this->middleware('auth',[
+            'except'=>['show','create','update','index']
+        ]);
+        //中间件未登录用户访问
+        $this->middleware('guest',[
+            'only' => ['create']
+        ]);
+    }
+
+    /**用户列表
+     * @param User $user
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function index(User $user)
+    {
+        $sortBy = null;
+        //如果$sortBy为空，默认id排序写法
+        $users = $user
+            ->when($sortBy, function ($query) use ($sortBy) {
+                return $query->orderBy($sortBy);
+            }, function ($query) {
+                return $query->orderBy('id');
+            })
+            ->paginate(10);
+        return view('users.index',compact('users'));
+    }
+
     /**展示用户个人信息
      * @param User $user
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
@@ -47,5 +77,52 @@ class UsersController extends Controller
         return redirect()->route('users.show', [$user]);
     }
 
+    /**更新用户个人信息页面
+     * @param User $user
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function edit(User $user)
+    {
+        //authorize验证用户授权策略，第一个参数是授权策略的名称，第二个参数是授权策略数据
+        $this->authorize('update',$user);
+        return view('users.edit',compact('user'));
+    }
+
+    /**更新用户资料
+     * @param Request $request
+     * @param User $user
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function update(Request $request,User $user)
+    {
+
+        $this->validate($request, [
+            'name' => 'required|max:50',
+            'password' => 'nullable|confirmed|min:6'
+        ]);
+        $this->authorize('update',$user);
+        $data= [];
+        $data['name']=$request->name;
+        if ($request->password){
+            $data['password'] = bcrypt($request->password);
+        }
+        $user->update($data);
+       \session()->flash('success','修改资料成功');
+
+       return redirect()->route('users.show',$user->id);
+
+    }
+
+    /**删除用户
+     * @param User $user
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function destroy(User $user)
+    {
+        $this->authorize('destroy', $user);
+        $user->delete();
+        session()->flash('success','成功删除用户！');
+        return back();
+    }
 
 }

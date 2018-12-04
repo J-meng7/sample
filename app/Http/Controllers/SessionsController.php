@@ -7,6 +7,13 @@ use Illuminate\Support\Facades\Auth;
 
 class SessionsController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('guest',[
+            'only'=>['create']
+        ]);
+    }
+
     /**显示登录页面
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
@@ -15,6 +22,10 @@ class SessionsController extends Controller
         return view('session.create');
     }
 
+    /**用户登录
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function store(Request $request)
     {
         $validator = $this->validate($request,[
@@ -24,13 +35,16 @@ class SessionsController extends Controller
         //进行登录验证
         if(Auth::attempt($validator,$request->has('remember'))){
             session()->flash('success','欢迎回来！');
-            return redirect()->route('users.show',[Auth::user()]);
+            return redirect()->intended(route('users.show',[Auth::user()]));
         }else{
             session()->flash('danger','很抱歉，您的邮箱和密码不匹配');
             return redirect()->back();
         }
     }
 
+    /**用户退出
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|void
+     */
     public function destroy()
     {
         Auth::logout();
