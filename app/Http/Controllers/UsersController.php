@@ -6,14 +6,15 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use Mail;
 
 class UsersController extends Controller
 {
     public function __construct()
     {
-        //auth中间件允许已登录用户访问
+        //不使用中间件过滤
         $this->middleware('auth',[
-            'except'=>['show','create','update','index']
+            'except' => ['show', 'create', 'store', 'index', 'confirmEmail']
         ]);
         //中间件未登录用户访问
         $this->middleware('guest',[
@@ -67,13 +68,50 @@ class UsersController extends Controller
             'email' => 'required|email|unique:users|max:255',
             'password' => 'required|confirmed|min:6'
         ]);
+
         $user =User::create([
             'name'=> $request->name,
             'email'=> $request->email,
             'password'=> bcrypt($request->password),
         ]);
+
+        $this->seedEmailConfirmationTo($user);
+        session()->flash('success','验证邮件已发送到你的注册邮箱上，请注意查收。');
+        return redirect('/');
+
+    }
+
+    /**发送邮件
+     * @param $user
+     */
+    public function seedEmailConfirmationTo($user)
+    {
+        $view = 'emails.confirm';       //视图
+        $data = compact('user'); //传递给视图的数据
+        $from = '523731804@qq.com';  //发送邮箱
+        $name = 'jia';   //发送人
+        $to = $user->email;  //收件人
+        $subject = "感谢注册 Sample 应用！请确认你的邮箱。"; //主题
+        Mail::send($view,$data,function ($message) use ($from,$name,$to,$subject){
+            $message->from($from,$name)->to($to)->subject($subject);
+        });
+    }
+
+    /**激活邮件
+     * @param $token
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function confirmEmail($token)
+    {
+        //查询出传递过来token相同的用户信息
+        $user = User::where('activation_token',$token)->firstOrFail();
+        //更新用户的token激活状态并把token赋值null
+        $user->activated = true;
+        $user->activation_token = null;
+        $user->save();
+        //登录
         Auth::login($user);
-        session()->flash('success', '欢迎，您将在这里开启一段新的旅程~');
+        session()->flash('success', '恭喜你，激活成功！');
         return redirect()->route('users.show', [$user]);
     }
 
