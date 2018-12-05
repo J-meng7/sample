@@ -88,12 +88,12 @@ class UsersController extends Controller
     {
         $view = 'emails.confirm';       //视图
         $data = compact('user'); //传递给视图的数据
-        $from = '523731804@qq.com';  //发送邮箱
-        $name = 'jia';   //发送人
+        //$from = '523731804@qq.com';  //发送邮箱
+        //$name = 'jia';   //发送人
         $to = $user->email;  //收件人
         $subject = "感谢注册 Sample 应用！请确认你的邮箱。"; //主题
-        Mail::send($view,$data,function ($message) use ($from,$name,$to,$subject){
-            $message->from($from,$name)->to($to)->subject($subject);
+        Mail::send($view,$data,function ($message) use ($to,$subject){
+            $message->to($to)->subject($subject);
         });
     }
 
