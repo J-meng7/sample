@@ -29,6 +29,8 @@ Route::post('password/email', 'Auth\ForgotPasswordController@sendResetLinkEmail'
 Route::get('password/reset/{token}', 'Auth\ResetPasswordController@showResetForm')->name('password.reset');
 Route::post('password/reset', 'Auth\ResetPasswordController@reset')->name('password.update');
 
+Route::resource('statuses','StatusesController',['only'=>['store','destroy']]);
+
 Route::get('signup/confirm/{token}','UsersController@confirmEmail')->name('confirm_email');
 Route::get('signup','UsersController@create')->name('signup');
 Route::resource('users', 'UsersController');
