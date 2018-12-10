@@ -16,12 +16,18 @@
      });
 */
 
+//主页
 Route::get('/','StaticPagesController@home')->name('home');
+//帮助页
 Route::get('/help','StaticPagesController@help')->name('help');
+//关于页
 Route::get('/about','StaticPagesController@about')->name('about');
 
+//创建登录页面
 Route::get('login','SessionsController@create')->name('login');
+//登录
 Route::post('login','SessionsController@store')->name('login');
+//退出
 Route::delete('logout','SessionsController@destroy')->name('logout');
 
 Route::get('password/reset','Auth\ForgotPasswordController@showLinkRequestForm')->name('password.request');
@@ -29,10 +35,23 @@ Route::post('password/email', 'Auth\ForgotPasswordController@sendResetLinkEmail'
 Route::get('password/reset/{token}', 'Auth\ResetPasswordController@showResetForm')->name('password.reset');
 Route::post('password/reset', 'Auth\ResetPasswordController@reset')->name('password.update');
 
+//关注人列表页面
+Route::get('/users/{user}/followings', 'UsersController@followings')->name('users.followings');
+//粉丝列表页面
+Route::get('/users/{user}/followers', 'UsersController@followers')->name('users.followers');
+//关注用户
+Route::post('/users/followers/{user}', 'FollowersController@store')->name('followers.store');
+//取消关注
+Route::delete('/users/followers/{user}', 'FollowersController@destroy')->name('followers.destroy');
+
+//微博创建与删除
 Route::resource('statuses','StatusesController',['only'=>['store','destroy']]);
 
+//确认激活邮箱页面
 Route::get('signup/confirm/{token}','UsersController@confirmEmail')->name('confirm_email');
+//登录页面
 Route::get('signup','UsersController@create')->name('signup');
+//用户
 Route::resource('users', 'UsersController');
 /**
  * 资源路由等同于下边
